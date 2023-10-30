@@ -1,0 +1,345 @@
+﻿1. Digital ocean > droplet > snapshot alendro2022
+2. Paste addon di > /usr/lib/python3/dist-packages/odoo/addons
+3. Contabo
+
+
+
+
+Diagram
+https://niftypm.com/blog/project-charts/#
+
+
+Add Font times new roman
+sudo add-apt-repository multiverse
+sudo apt update && sudo apt install ttf-mscorefonts-installer
+sudo fc-cache -f -v
+
+sudo apt-get update && sudo apt-get upgrade
+	Contabo 
+1. Ubah pake key buat ssh, jangan pake password
+https://contabo.com/blog/how-to-use-ssh-keys-with-your-server/#h-why-should-i-use-ssh-keys-instead-of-passwords
+   1. mkdir /root/.ssh && cd /root/.ssh
+   2. nano authorized_keys
+   3. [copy key]
+   4. nano /etc/ssh/sshd_config
+Ubah : jadi no (ctrl + w) untuk search
+      1. ChallengeResponseAuthentication no
+      2. PasswordAuthentication no
+      3. UsePAM no
+      4. [CTRL + X]
+      5. reboot
+
+
+Install Odoo 
+      1. Download dari sini :https://www.odoo.com/page/download
+      2. Winscp ke server, upload filenya
+sudo apt install postgresql -y
+dpkg -i [file yg di upload]
+sudo apt-get install -f
+dpkg -i [file yg di upload]
+sudo apt-get update && sudo apt-get upgrade
+apt install python3-pip -y
+sudo pip3 install xlwt --root-user-action=ignore
+sudo pip3 install num2words --root-user-action=ignore
+sudo pip install PyPDF2==1.26.0 --root-user-action=ignore
+	
+
+Install odoo v2
+https://www.odoo.com/documentation/16.0/administration/install/install.html#linux
+sudo apt install postgresql -y
+wget -q -O - https://nightly.odoo.com/odoo.key | sudo gpg --dearmor -o /usr/share/keyrings/odoo-archive-keyring.gpg
+	
+
+echo 'deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg] https://nightly.odoo.com/16.0/nightly/deb/ ./' | sudo tee /etc/apt/sources.list.d/odoo.list
+	
+
+sudo apt-get update && sudo apt-get install odoo
+sudo apt-get upgrade
+sudo apt install python3-pip -y
+	
+
+sudo pip3 install xlwt --root-user-action=ignore
+sudo pip3 install num2words --root-user-action=ignore
+sudo pip install PyPDF2==1.26.0 --root-user-action=ignore
+	
+
+Nginx & ssl odoo
+      1. Pergi ke settingan dns, arahkan ke vps
+sudo apt update | sudo apt install nginx -y
+sudo apt install certbot -y
+systemctl stop nginx
+	
+
+certbot certonly --standalone -d [nama web] --preferred-challenges http --agree-tos -n -m [email] --keep-until-expiring
+	      2. [copy lokasi certificate dan certificate key]
+nano  /etc/nginx/sites-enabled/odoo.conf
+	
+
+#odoo server
+upstream odoo {
+server 127.0.0.1:8069;
+}
+upstream odoochat {
+server 127.0.0.1:8072;
+}
+
+# http -> https
+server {
+listen 80;
+server_name [nama web];
+rewrite ^(.*) https://$host$1 permanent;
+}
+
+server {
+listen 443;
+server_name [nama web];
+proxy_read_timeout 720s;
+proxy_connect_timeout 720s;
+proxy_send_timeout 720s;
+
+# Add Headers for odoo proxy mode
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header X-Real-IP $remote_addr;
+
+# SSL parameters
+ssl on;
+ssl_certificate [lokasi certificate];
+ssl_certificate_key [lokasi certificate];
+
+# log
+access_log /var/log/nginx/odoo.access.log;
+error_log /var/log/nginx/odoo.error.log;
+
+# Redirect longpoll requests to odoo longpolling port
+location /longpolling {
+proxy_pass http://odoochat;
+}
+
+# Redirect requests to odoo backend server
+location / {
+proxy_redirect off;
+proxy_pass http://odoo;
+}
+
+# common gzip
+gzip_types text/css text/scss text/plain text/xml application/xml application/json application/javascript;
+gzip on;
+}
+	
+
+nano /etc/odoo/odoo.conf
+	        
+Tambah ini ini:
+proxy_mode = True
+	
+
+systemctl restart odoo
+systemctl start nginx 
+	
+
+Renew certbot
+systemctl stop nginx
+certbot certonly --standalone -d [nama web] --preferred-challenges http --agree-tos -n -m [email] --keep-until-expiring
+	
+
+systemctl start nginx 
+	
+
+
+
+Cronjob untuk renew certbot
+      1. 
+
+Odoo 
+      1. https://www.odoo.com/documentation/16.0/developer/iot.html
+      2. https://www.odoo.com/documentation/16.0/administration.html
+      3. https://www.odoo.com/documentation/16.0/applications/general/email_communication/email_servers.html
+
+
+
+Wkhtmltopdf di ssh 
+wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+	
+
+apt-get -f install
+dpkg -i wk[tab]
+	
+
+apt-get -f install
+sudo cp ./wkhtmltox/bin/wkhtmltoimage /usr/bin/
+sudo cp ./wkhtmltox/bin/wkhtmltopdf /usr/bin/
+	
+
+
+
+(buka lewat alendrokupang@gmail.com)
+         1. https://www.odoo.com/id_ID/slides/partnership-knowledge-base-39
+         2. https://www.odoo.com/id_ID/slides/all?slide_category=certification
+         3. https://www.odoo.com/id_ID/slides/getting-started-15
+
+SLA
+https://apps.odoo.com/apps/modules/16.0/project_task_sla/
+
+
+SNI
+            1. https://sni-certification.com/?page_id=115
+
+
+Remove installed program dan configurations
+sudo apt-get remove nginx nginx-common
+sudo apt-get purge nginx nginx-common
+sudo apt-get autoremove
+sudo apt install nginx
+	
+
+Odoo domain
+            1. https://www.odoo.com/forum/help-1/domain-name-for-website-in-odoo-community-edition-152627
+
+
+
+Ubah warna website
+               1. https://www.odoo.com/id_ID/forum/bantuan-1/how-can-i-change-the-odoo-basic-theme-color-v15-ee-203185
+               2. Setting > technical > user interface > views 
+               3. Create 
+               4. View ray : custom_ray_odoo
+               5. Type : Qweb
+               6. Inherit : web layout
+               7. Inheritance mode : extension view
+               8. Code: ganti warna pake hex code
+
+<data inherit_id="web.layout">
+  <xpath expr="//body" position="inside">
+      <style>
+          .o_main_navbar {background-color: #5a7b87 !important;border-bottom: 0px;}
+          .o_main_navbar .show .dropdown-toggle {background-color: #5a7b87;}
+          .o_main_navbar > ul > li > a:hover, .o_main_navbar
+                 > ul > li > label:hover {background-color: #4a666f;}
+          .o_main_navbar > a:hover, .o_main_navbar > a:focus, .o_main_navbar
+                 > button:hover, .o_main_navbar
+                 > button:focus {background-color: #4a666f;color: inherit;}
+          .o_main_navbar > a:hover, .o_main_navbar > a:focus, .o_main_navbar
+                 > button:hover, .o_main_navbar
+                 > button:focus {background-color: #4a666f;color: inherit;}  
+      <style>
+  <xpath>
+<data>
+
+	
+
+
+
+
+
+Change Title website
+                  1. Ssh ke cloud
+                  2. cd /usr/lib/python3/dist-packages/odoo/addons/web/static/src/webclient
+                  3. nano webclient.js
+                  4. Ubah 
+
+
+
+
+Export data
+                  1. Customer 
+                  1. Nama
+                  2. Alamat
+                  2. Product
+                  1. Internal reference
+                  2. Name
+                  3. Sales price
+                  4. Product type
+                  3. Invoice
+                  1. Number
+                  2. Invoice date
+                  3. Due date
+                  4. Payment terms
+                  5. Sales person
+                  6. Invoice line
+                  1. Product
+                  2. Quantity
+                  3. Taxes
+                  4. Unit price
+                  7. Partner name
+
+
+
+
+Update 3rd party apps
+                  1. Upload via winscp ke 
+/usr/lib/python3/dist-packages/odoo/addons
+	                  2. Buka Putty
+cd /usr/lib/python3/dist-packages/odoo/addons
+	                  3. Unzip file yg di upload
+                  4. Ke odoo > setting > Activate the developer mode (with tests assets)
+                  5. Ke Apps > Update Apps List > Update
+                  6. Cari apps > install
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Ngubah struktur Struk pos
+                  1. Ke 
+Cd /usr/lib/python3/dist-packages/odoo/addons/point_of_sale/static/src/xml/Screens/ReceiptScreen
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+Buat sales order tidak bisa di edit setelah di validate
+                  1. Pergi ke
+
+Cd /usr/lib/python3/dist-/odoo/addons/sale/models/sale_order.py
+	                     2. Nano filenya
+                     3. Ubah di baris ke : 844
+                     4. Di fuction 
+_prepare_confirmation_values
+                     5. ‘State’: ‘done’
+
+
+
+
+
+
+
+
+
+
+Cari kata dalam file2 di linux
+ grep -ilR 'text’
+
+
+
+
+Ubah tulisan dalam bahasa indo
+                        1. Cd /usr/lib/python3/dist-packages/odoo/addons/point_of_sale/i18n/id.po
+                        2. Ctrl +w >> cari
+
+
+Ubah tampilan POS
+                        1. Cd /usr/lib/python3/dist-packages/odoo/addons/point_of_sale/static/src/xml/Screens/
+                        2. Ubah tampilan di halaman
